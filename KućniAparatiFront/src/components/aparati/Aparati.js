@@ -5,20 +5,18 @@ import { useNavigate } from "react-router-dom";
 
 const Aparati = () => {
   //potrebno je zbog create-a
-  const emptyTask = {
-    name: "",
-    employee: "",
-    points: "",
-    sprintId: -1,
+  const emptyAparat = {
+    naziv: "",
+    tip: "",
+    istekGarancije: "",
+    cena: -1,
+    garantniRok: "",
   }
-  const [task, setTask] = useState(emptyTask)
-  const [tasks, setTasks] = useState([])
-  const [sprints, setSprints] = useState([])
-  const [search, setSearch] = useState({ taskName: "", sprintId: -1})
-  const [showSearch, setShowSearch] = useState(false)
+  const [aparat, setAparat] = useState(emptyAparat)
+  const [aparati, setAparati] = useState([])
+  const [stanja, setStanja] = useState([])
   const [pageNo, setPageNo] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
-  const [sprintSum, setSprintSum] = useState("")
   const navigate = useNavigate()
 
   useEffect(()=>{
@@ -26,230 +24,166 @@ const Aparati = () => {
   }, [])
 
   const getData = () => {
-    getSprints();
-    getTasks(0);
+    getStanja();
+    getAparati();
   }
 
-  const getTasks = (page) => {
-    let config = { params: {
-      pageNo: page
-    } };
 
-    //Sledeca 2 if-a su tu zbog search-a
-    if (search.taskName != "") {
-      config.params.taskName = search.taskName;
-    }
-
-    if (search.sprintId != -1) {
-      config.params.sprintId = search.sprintId;
-    }
-
-    AparatiAxios.get("/aparati", config)
+  const getAparati = () => {
+    AparatiAxios.get("/aparati")
     .then((result)=>{
-      const sprintSum = result.headers["sprint-total"]?result.headers["sprint-total"]:"";
-      setPageNo(page)
-      setTasks(result.data)
-      setTotalPages(result.headers["total-pages"])
-      setSprintSum(sprintSum)
+      console.log(result.data)
+      setAparati(result.data)
     }).catch(()=>{
       alert("Nije uspelo dobavljanje.");
     })
   }
 
-  const getSprints = () => {
-    AparatiAxios.get("/sprints").then((result) => {
-      setSprints(result.data)
+  const getStanja = () => {
+    AparatiAxios.get("/stanja").then((result) => {
+      setStanja(result.data)
     }).catch(()=>{
       alert("Nije uspelo dobavljanje.");
     })
   }
 
-  const goToEdit = (taskId) => {
-    navigate("/aparati/edit/" + taskId);
+  const goToEdit = (aparatId) => {
+    navigate("/aparati/edit/" + aparatId);
   }
 
   const doAdd = () => {
-    AparatiAxios.post("/aparati/", task)
+    AparatiAxios.post("/aparati/", aparat)
     .then(()=>{
+      console.log(aparat)
       //bitno je da bi "resetovali" polja za kreiranje nakon kreiranja
-      let task = {
-        name: "",
-        employee: "",
-        points: "",
-        sprintId: -1,
+      let aparat = {
+        naziv: "",
+        tip: "",
+        istekGarancije: "",
+        cena: -1,
+        garantniRok: ""
       };
-      setTask(task)
-      getTasks(0);
+      setAparati(aparat)
+      getAparati();
     }).catch(() =>{
       alert("Nije uspelo dodavanje.");
+      console.log(aparat)
     })
   }
 
-  const doDelete = (taskId) => {
-    AparatiAxios.delete("/aparati/" + taskId)
+  const doDelete = (aparatId) => {
+    AparatiAxios.delete("/aparati/" + aparatId)
       .then(()=>{
         var nextPage
-        if(pageNo==totalPages-1 && tasks.length==1){
+        if(pageNo==totalPages-1 && aparati.length==1){
           nextPage = pageNo-1
         }else{
           nextPage = pageNo
         }
-        getTasks(nextPage);
+        getAparati(nextPage);
       }).catch((error) => {
         alert("Nije uspelo brisanje.");
       })
   }
 
   const addValueInputChange = (event) => {
-    let newTask = {...task}
+    let newaparat = {...aparat}
 
     const name = event.target.name;
     const value = event.target.value;
 
-    newTask[name] = value
-    setTask(newTask);
-  }
-
-  const searchValueInputChange = (event) => {
-    let newSearch = {...search}
-
-    const name = event.target.name;
-    const value = event.target.value;
-
-    newSearch[name] = value
-    setSearch(newSearch);
-  }
-
-  const doSearch = () => {
-    getTasks(0);
-  }
-
-  const canCreateTask = () => {
-    return task.name!="" && 
-      (task.points!="" && task.points>=0 && task.points<=20 && task.points%1==0)
-       && task.sprintId != -1
-  }
-
-  const changeState = (taskId) => {
-      AparatiAxios.post(`/aparati/${taskId}/change_state`)
-      .then((ret)=>{
-        tasks.forEach((element, index) => {
-          if (element.id === taskId) {
-            tasks.splice(index, 1, ret.data);
-            setTasks([...tasks]);
-          }
-        });
-      }).catch(()=>{
-        alert("Nije moguće promeniti stanje.");
-      })
+    newaparat[name] = value
+    setAparat(newaparat);
   }
 
   return (
     <div>
-      <h1>Tasks</h1>
+      <h1>Aparati</h1>
       {/*Deo za ADD*/}
       {window.localStorage['role']=="ROLE_ADMIN"?
       <Form>
         <Form.Group>
-          <Form.Label>Name</Form.Label>
+          <Form.Label>Naziv</Form.Label>
           <Form.Control
             onChange={(event) => addValueInputChange(event)}
-            name="name"
-            value={task.name}
+            name="naziv"
+            value={aparat.naziv}
             as="input"
           ></Form.Control>
         </Form.Group>
         <Form.Group>
-          <Form.Label>Employee</Form.Label>
+          <Form.Label>Tip</Form.Label>
           <Form.Control
             onChange={(event) => addValueInputChange(event)}
-            name="employee"
-            value={task.employee}
+            name="tip"
+            value={aparat.tip}
             as="input"
           ></Form.Control>
         </Form.Group>
         <Form.Group>
-          <Form.Label>Points</Form.Label>
+          <Form.Label>Garancija ističe: </Form.Label>
           <Form.Control
             onChange={(event) => addValueInputChange(event)}
-            name="points"
-            value={task.points}
+            name="istekGarancije"
+            value={aparat.istekGarancije}
+            as="input"
+          ></Form.Control>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Cena</Form.Label>
+          <Form.Control
+            onChange={(event) => addValueInputChange(event)}
+            name="cena"
+            value={aparat.cena}
             as="input"
             type="number"
             min = "0"
             step = "1"
           ></Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Sprint</Form.Label>
+          <Form.Group>
+          <Form.Label>Garantni rok: </Form.Label>
           <Form.Control
             onChange={(event) => addValueInputChange(event)}
-            name="sprintId"
-            value={task.sprintId}
+            name="garantniRok"
+            value={aparat.garantniRok}
+            as="input"
+          ></Form.Control>
+        </Form.Group>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Stanje</Form.Label>
+          <Form.Control
+            onChange={(event) => addValueInputChange(event)}
+            name="stanjeId"
+            value={aparat.stanjeId}
             as="select"
           >
             <option value={-1}></option>
-            {sprints.map((sprint) => {
+            {stanja.map((stanje) => {
               return (
-                <option value={sprint.id} key={sprint.id}>
-                  {sprint.name}
+                <option value={stanje.id} key={stanje.id}>
+                  {stanje.opis}
                 </option>
               );
             })}
           </Form.Control>
         </Form.Group>
-        <Button disabled = {!canCreateTask()} variant="primary" onClick={() => doAdd()}>
+        <Button variant="primary" onClick={() => doAdd()}>
           Add
         </Button>
       </Form>:null}
 
-      {/*Deo za Search*/}
-      <Form.Group style={{marginTop:35}}>
-        <Form.Check type="checkbox" label="Show search form" onClick={(event) => setShowSearch(event.target.checked)}/>
-      </Form.Group>
-      <Collapse in={showSearch}>
-      <Form style={{marginTop:10}}>
-        <Form.Group>
-          <Form.Label>Ime zadatka</Form.Label>
-          <Form.Control
-            value={search.taskName}
-            name="taskName"
-            as="input"
-            onChange={(e) => searchValueInputChange(e)}
-          ></Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Sprint</Form.Label>
-          <Form.Control
-            onChange={(event) => searchValueInputChange(event)}
-            name="sprintId"
-            value={search.sprintId}
-            as="select"
-          >
-            <option value={-1}></option>
-            {sprints.map((sprint) => {
-              return (
-                <option value={sprint.id} key={sprint.id}>
-                  {sprint.name}
-                </option>
-              );
-            })}
-          </Form.Control>
-        </Form.Group>
-        <Button onClick={() => doSearch()}>Search</Button>
-      </Form>
-      </Collapse>
 
-        {/*Deo za prikaz Task-a*/}
+        {/*Deo za prikaz aparat-a*/}
       <ButtonGroup style={{ marginTop: 25, float:"right"}}>
         <Button 
           style={{ margin: 3, width: 90}}
-          disabled={pageNo==0} onClick={()=>getTasks(pageNo-1)}>
+          disabled={pageNo==0} onClick={()=>getAparati(pageNo-1)}>
           Previous
         </Button>
         <Button
           style={{ margin: 3, width: 90}}
-          disabled={pageNo==totalPages-1} onClick={()=>getTasks(pageNo+1)}>
+          disabled={pageNo==totalPages-1} onClick={()=>getAparati(pageNo+1)}>
           Next
         </Button>
       </ButtonGroup>
@@ -257,35 +191,28 @@ const Aparati = () => {
       <Table bordered striped style={{ marginTop: 5 }}>
         <thead className="thead-dark">
           <tr>
-            <th>Name</th>
-            <th>Employees</th>
-            <th>Points</th>
-            <th>State</th>
-            <th>Sprint</th>
-            <th colSpan={2}>Actions</th>
+            <th>Naziv</th>
+            <th>Tip</th>
+            <th>Datum isteka garancije:</th>
+            <th>Cena</th>
+            <th>Preostali garantni rok:</th>
+            <th colSpan={2}>Akcije</th>
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task) => {
+          {aparati.map((aparat) => {
             return (
-              <tr key={task.id}>
-                <td>{task.name}</td>
-                <td>{task.employee}</td>
-                <td>{task.points}</td>
-                <td>{task.stateName}</td>
-                <td>{task.sprintName}</td>
+              <tr key={aparat.id}>
+                <td>{aparat.naziv}</td>
+                <td>{aparat.tip}</td>
+                <td>{aparat.istekGarancije}</td>
+                <td>{aparat.cena}</td>
+                <td>{aparat.garantniRok}</td>
                 <td>
-                  <Button
-                    disabled={task.stateId === 3}
-                    variant="info"
-                    onClick={() => changeState(task.id)}
-                  >
-                    Change State
-                  </Button>
                   {window.localStorage['role']=="ROLE_ADMIN"?
                   [<Button
                     variant="warning"
-                    onClick={() => goToEdit(task.id)}
+                    onClick={() => goToEdit(aparat.id)}
                     style={{ marginLeft: 5 }}
                   >
                     Edit
@@ -293,7 +220,7 @@ const Aparati = () => {
 
                   <Button
                     variant="danger"
-                    onClick={() => doDelete(task.id)}
+                    onClick={() => doDelete(aparat.id)}
                     style={{ marginLeft: 5 }}
                   >
                     Delete
@@ -304,7 +231,6 @@ const Aparati = () => {
           })}
         </tbody>
       </Table>
-      <h2 hidden={sprintSum == ""}>Suma bodova za sprint je {sprintSum}</h2>
     </div>
   );
 }
