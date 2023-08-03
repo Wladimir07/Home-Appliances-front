@@ -14,8 +14,8 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>com.my.project</groupId>
-	<artifactId>KucniAparatiApplication</artifactId>
+	<groupId>com.ftninformatika.jwd.modul3</groupId>
+	<artifactId>back</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<!-- lookup parent from repository -->
 	<!-- jar je predefinisana vrednost, ako se želi postavit war vrednost onda 

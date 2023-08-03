@@ -12,7 +12,8 @@ import { Container, Navbar, Nav, Button } from "react-bootstrap";
 import Login from "./components/Login/Login";
 import { logout } from "./services/auth";
 import Aparati from "./components/aparati/Aparati";
-import EditZadatak from "./components/aparati/EditTask";
+import AddAparat from "./components/aparati/AddAparat";
+import EditAparat from "./components/aparati/EditAparat";
 
 const App = () => {
     return (
@@ -28,6 +29,9 @@ const App = () => {
               <Nav.Link as={Link} to="/aparati">
                 Aparati
               </Nav.Link>
+              <Nav.Link as={Link} to="/aparati/add">
+                Dodaj aparat
+              </Nav.Link>
             </Nav>
 
             {window.localStorage['jwt'] ? 
@@ -40,7 +44,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Home/>} />
               <Route path="/aparati" element={<Aparati/>} />
-              <Route path="/aparati/edit/:id" element={<EditZadatak/>} />
+              <Route path="/aparati/add" element={<AddAparat/>} />
+              <Route path="/aparati/edit/:id" element={<EditAparat/>} />
               <Route path="/login" element={<Login/>}/>
               <Route path="*" element={<NotFound/>} />
             </Routes>

@@ -4,19 +4,12 @@ import AparatiAxios from "../../apis/AparatiAxios";
 import { useNavigate } from "react-router-dom";
 
 const Aparati = () => {
-  //potrebno je zbog create-a
-  const emptyAparat = {
-    naziv: "",
-    tip: "",
-    istekGarancije: "",
-    cena: -1,
-    garantniRok: "",
-  }
-  const [aparat, setAparat] = useState(emptyAparat)
+ 
+  const [aparat, setAparat] = useState({})
   const [aparati, setAparati] = useState([])
   const [stanja, setStanja] = useState([])
-  const [pageNo, setPageNo] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
+  const [kategorije, setKategorije] = useState([])
+
   const navigate = useNavigate()
 
   useEffect(()=>{
@@ -24,6 +17,7 @@ const Aparati = () => {
   }, [])
 
   const getData = () => {
+    getKategorije();
     getStanja();
     getAparati();
   }
@@ -47,146 +41,34 @@ const Aparati = () => {
     })
   }
 
-  const goToEdit = (aparatId) => {
-    navigate("/aparati/edit/" + aparatId);
+  const getKategorije = () => {
+    AparatiAxios.get("/kategorije").then((result) => {
+      setKategorije(result.data)
+    }).catch(()=>{
+      alert("Nije uspelo dobavljanje.");
+    })
   }
 
-  const doAdd = () => {
-    AparatiAxios.post("/aparati/", aparat)
-    .then(()=>{
-      console.log(aparat)
-      //bitno je da bi "resetovali" polja za kreiranje nakon kreiranja
-      let aparat = {
-        naziv: "",
-        tip: "",
-        istekGarancije: "",
-        cena: -1,
-        garantniRok: ""
-      };
-      setAparati(aparat)
-      getAparati();
-    }).catch(() =>{
-      alert("Nije uspelo dodavanje.");
-      console.log(aparat)
-    })
+  const goToEdit = (aparatId) => {
+    navigate("/aparati/edit/" + aparatId);
   }
 
   const doDelete = (aparatId) => {
     AparatiAxios.delete("/aparati/" + aparatId)
       .then(()=>{
-        var nextPage
-        if(pageNo==totalPages-1 && aparati.length==1){
-          nextPage = pageNo-1
-        }else{
-          nextPage = pageNo
-        }
-        getAparati(nextPage);
+        getAparati();
       }).catch((error) => {
         alert("Nije uspelo brisanje.");
       })
-  }
-
-  const addValueInputChange = (event) => {
-    let newaparat = {...aparat}
-
-    const name = event.target.name;
-    const value = event.target.value;
-
-    newaparat[name] = value
-    setAparat(newaparat);
   }
 
   return (
     <div>
       <h1>Aparati</h1>
       {/*Deo za ADD*/}
-      {window.localStorage['role']=="ROLE_ADMIN"?
-      <Form>
-        <Form.Group>
-          <Form.Label>Naziv</Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="naziv"
-            value={aparat.naziv}
-            as="input"
-          ></Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Tip</Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="tip"
-            value={aparat.tip}
-            as="input"
-          ></Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Garancija ističe: </Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="istekGarancije"
-            value={aparat.istekGarancije}
-            as="input"
-          ></Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Cena</Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="cena"
-            value={aparat.cena}
-            as="input"
-            type="number"
-            min = "0"
-            step = "1"
-          ></Form.Control>
-          <Form.Group>
-          <Form.Label>Garantni rok: </Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="garantniRok"
-            value={aparat.garantniRok}
-            as="input"
-          ></Form.Control>
-        </Form.Group>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Stanje</Form.Label>
-          <Form.Control
-            onChange={(event) => addValueInputChange(event)}
-            name="stanjeId"
-            value={aparat.stanjeId}
-            as="select"
-          >
-            <option value={-1}></option>
-            {stanja.map((stanje) => {
-              return (
-                <option value={stanje.id} key={stanje.id}>
-                  {stanje.opis}
-                </option>
-              );
-            })}
-          </Form.Control>
-        </Form.Group>
-        <Button variant="primary" onClick={() => doAdd()}>
-          Add
-        </Button>
-      </Form>:null}
 
-
+      <img className="img-fluid" src="home appliances.jpg" alt="mechanic"></img>
         {/*Deo za prikaz aparat-a*/}
-      <ButtonGroup style={{ marginTop: 25, float:"right"}}>
-        <Button 
-          style={{ margin: 3, width: 90}}
-          disabled={pageNo==0} onClick={()=>getAparati(pageNo-1)}>
-          Previous
-        </Button>
-        <Button
-          style={{ margin: 3, width: 90}}
-          disabled={pageNo==totalPages-1} onClick={()=>getAparati(pageNo+1)}>
-          Next
-        </Button>
-      </ButtonGroup>
 
       <Table bordered striped style={{ marginTop: 5 }}>
         <thead className="thead-dark">
